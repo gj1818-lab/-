@@ -148,13 +148,13 @@ for i,r in enumerate(rows):
      'T':(f'=IF($H{rw}="","",IF(AND(ISNUMBER(SEARCH("CMT",$H{rw})),OR(ISNUMBER(SEARCH("완사입",$H{rw})),ISNUMBER(SEARCH("ODM",$H{rw})))),'
           f'"본사/생산처 혼재",IF(ISNUMBER(SEARCH("CMT",$H{rw})),"본사(소재팀)","생산처")))'),
      'U':r['생산처'],
-     'V':f'=IFERROR(TEXTJOIN(" / ",TRUE,UNIQUE(FILTER(소재DB_RAW!$K$3:$K,소재DB_RAW!$G$3:$G=$D{rw}))),"")',
+     'V':f'=IFERROR(TEXTJOIN(" / ",TRUE,UNIQUE(FILTER(소재DB_RAW!$K$3:$K$2000,소재DB_RAW!$G$3:$G$2000=$D{rw}))),"")',
      'W':r['원산지'],
-     'X':f'=IFERROR(TEXTJOIN(" / ",TRUE,UNIQUE(FILTER(소재DB_RAW!$N$3:$N,소재DB_RAW!$G$3:$G=$D{rw}))),"")',
-     'Y':(f'=IFERROR(TEXTJOIN(CHAR(10),TRUE,UNIQUE(FILTER(소재DB_RAW!$N$3:$N&") "&소재DB_RAW!$O$3:$O,'
-          f'(소재DB_RAW!$G$3:$G=$D{rw})*ISNUMBER(SEARCH("겉감",소재DB_RAW!$M$3:$M))))),"")'),
-     'Z':(f'=IFERROR(TEXTJOIN(CHAR(10),TRUE,UNIQUE(FILTER(소재DB_RAW!$N$3:$N&") "&소재DB_RAW!$O$3:$O,'
-          f'(소재DB_RAW!$G$3:$G=$D{rw})*ISNUMBER(SEARCH("안감",소재DB_RAW!$M$3:$M))))),"")'),
+     'X':f'=IFERROR(TEXTJOIN(" / ",TRUE,UNIQUE(FILTER(소재DB_RAW!$N$3:$N$2000,소재DB_RAW!$G$3:$G$2000=$D{rw}))),"")',
+     'Y':(f'=IFERROR(TEXTJOIN(CHAR(10),TRUE,UNIQUE(FILTER(소재DB_RAW!$N$3:$N$2000&") "&소재DB_RAW!$O$3:$O$2000,'
+          f'(소재DB_RAW!$G$3:$G$2000=$D{rw})*ISNUMBER(SEARCH("겉감",소재DB_RAW!$M$3:$M$2000))))),"")'),
+     'Z':(f'=IFERROR(TEXTJOIN(CHAR(10),TRUE,UNIQUE(FILTER(소재DB_RAW!$N$3:$N$2000&") "&소재DB_RAW!$O$3:$O$2000,'
+          f'(소재DB_RAW!$G$3:$G$2000=$D{rw})*ISNUMBER(SEARCH("안감",소재DB_RAW!$M$3:$M$2000))))),"")'),
      'AA':int(r['기획수량'] or 0),
      'AB':int(r['원가합'] or 0),'AC':int(r['소매가합'] or 0),'AD':nap_v,
      'AE':(f'=IF($K{rw}="","출고일 미정",IF($Q{rw}="X","작지 미발행",IF($Q{rw}="부분","작지 일부 미발행",'
