@@ -63,7 +63,8 @@ sec=[("정렬 순서",BRAND,[
  "· 작지발행: 0808 원본 '작지발행' 건수 / 컬러 구성: 컬러코드 + 브랜드 컬러명 매핑 / 사양확정: 전산 EDW (8/6, 정보성)",
  "· 비수기: KS_비수기 선정.xlsx 27SS비수기 탭 (8/6 수정본) N열 'O' 기준",
  "· 원단처/겉감/안감/생산처(소재DB): '27SS_소재DB' Merged Data 탭과 IMPORTRANGE 실시간 연동 (숨김 탭 '소재DB_RAW')",
- "· 최초 1회: 시트를 열고 '소재DB_RAW' 탭(숨김 해제)에서 A3 셀의 '액세스 허용' 클릭 필요 — 이후 자동 갱신",
+ "· 사양확정: '27SS 생산 프로세스 진척현황(자동화)' EDW_RAW와 실시간 연동 (숨김 탭 'EDW_RAW') — 컬러 전체 결재 O / 일부 '부분' / 없음 X",
+ "· 최초 1회: '소재DB_RAW' 탭 A3 셀과 'EDW_RAW' 탭 A2 셀에서 각각 '액세스 허용' 클릭 필요 — 이후 자동 갱신",
  "· 생산처(소재DB) 열은 크로스체크용 — 0808 생산처와 다르면 빨간색 표시 (픽스처/픽스쳐 같은 표기 차이도 포함되니 확인 필요)",
  "· WM/피싱(8로 시작)은 0808 원본에 기획수량 0으로 입력되어 수량 합계 공란 — 금액은 원본 총원가/총공급가 기준",
  "· 8UTCM27101은 컬러별 출고일 상이(1월3주/4월2주) → 다수 값 적용, 확인 필요"])]
@@ -103,10 +104,10 @@ for col,wd in [('B',24),('C',52),('D',50)]: ws.column_dimensions[col].width=wd
 ws=wb.create_sheet("소재역산 트래커")
 headers=["NO","MD","DS","Style Code","품명","컬러 구성","시즌","생산형태 (수/C/완)","출고차순","출고일(주차)","출고예정일",
          "제품입고 시점 (출고-2주, 설연휴 보정)","공장휴무 보정 (일)","소재입고 마감일 (입고-90일-보정)","마감까지 D-day",
-         "비수기 선정","작지발행","사양확정 (전산 8/6)","소재입고 예정/실제일","소재입고 책임","생산처","생산처 (소재DB)","원산지",
+         "비수기 선정","작지발행","사양확정 (전산 실시간)","소재입고 예정/실제일","소재입고 책임","생산처","생산처 (소재DB)","원산지",
          "원단처 (에이전시)","겉감정보 (원단처+품명)","안감정보 (원단처+품명)",
          "기획수량","원가합 (원)","소매가합 (원)","납기1차 (전산참고)","리스크 사유","판정","조율상태","메모/조치사항"]
-INPUT={'J','P','Q','R','S','AG','AH'}
+INPUT={'J','P','Q','S','AG','AH'}
 ws.freeze_panes='F5'
 h(ws,'A1',"27SS 소재일정 역산 트래커 — 정렬: S코드(봄) → 비수기 선정 → 나머지 (424 스타일)",14)
 ws['A2']="기준일:"; ws['A2'].font=Font(name=F,size=10,color="666666")
@@ -144,7 +145,12 @@ for i,r in enumerate(rows):
      'N':f'=IF($L{rw}="","",$L{rw}-기준정보!$C$6-$M{rw})',
      'O':f'=IF($N{rw}="","",$N{rw}-기준정보!$C$4)',
      'P':r['비수기'] or None,
-     'Q':r['작지발행'],'R':r['사양확정'] or None,'S':None,
+     'Q':r['작지발행'],
+     'R':(f'=IF(COUNTIF(EDW_RAW!$A$2:$A$1500,$D{rw})=0,"",'
+          f'IF(COUNTIFS(EDW_RAW!$A$2:$A$1500,$D{rw},EDW_RAW!$U$2:$U$1500,"<>~",EDW_RAW!$U$2:$U$1500,"<>")'
+          f'=COUNTIF(EDW_RAW!$A$2:$A$1500,$D{rw}),"O",'
+          f'IF(COUNTIFS(EDW_RAW!$A$2:$A$1500,$D{rw},EDW_RAW!$U$2:$U$1500,"<>~",EDW_RAW!$U$2:$U$1500,"<>")>0,"부분","X")))'),
+     'S':None,
      'T':(f'=IF($H{rw}="","",IF(AND(ISNUMBER(SEARCH("CMT",$H{rw})),OR(ISNUMBER(SEARCH("완사입",$H{rw})),ISNUMBER(SEARCH("ODM",$H{rw})))),'
           f'"본사/생산처 혼재",IF(ISNUMBER(SEARCH("CMT",$H{rw})),"본사(소재팀)","생산처")))'),
      'U':r['생산처'],
@@ -177,7 +183,7 @@ for i,r in enumerate(rows):
         if col in ('A','G','I','J','M','O','P','Q','R','AF','AG'): c.alignment=Alignment(horizontal='center')
 
 last=HR+N
-for f1,rng in [('"O,X"',f'P{HR+1}:P{last}'),('"O,부분,X"',f'Q{HR+1}:Q{last}'),('"O,부분,X"',f'R{HR+1}:R{last}'),('"미조율,조율중,조율완료"',f'AG{HR+1}:AG{last}')]:
+for f1,rng in [('"O,X"',f'P{HR+1}:P{last}'),('"O,부분,X"',f'Q{HR+1}:Q{last}'),('"미조율,조율중,조율완료"',f'AG{HR+1}:AG{last}')]:
     dv=DataValidation(type="list",formula1=f1,allow_blank=True); ws.add_data_validation(dv); dv.add(rng)
 def cf(col,txt,color,fc):
     dxf=DifferentialStyle(fill=PatternFill(start_color=color,end_color=color,fill_type='solid'),font=Font(name=F,color=fc,bold=True))
@@ -200,6 +206,13 @@ ws=wb.create_sheet("소재DB_RAW")
 ws['A1']="27SS_소재DB > Merged Data 실시간 연동 (IMPORTRANGE). 최초 1회 A3 셀에서 '액세스 허용'을 클릭해야 합니다. 이 탭은 수정하지 마세요."
 ws['A1'].font=Font(name=F,size=10,bold=True,color=RED)
 ws['A3']='=IMPORTRANGE("https://docs.google.com/spreadsheets/d/1_LNPz9XGRmRAJ9Y4cqtFF8NtZTLSIld4vtzLJlOcka0","Merged Data!A3:P2000")'
+ws.sheet_state='hidden'
+
+# ---------- EDW_RAW (사양확정 실시간 연동 헬퍼) ----------
+ws=wb.create_sheet("EDW_RAW")
+ws['A1']="'27SS 생산 프로세스 진척현황(자동화)' > EDW_RAW 실시간 연동. 최초 1회 A2 셀에서 '액세스 허용' 클릭 필요. 이 탭은 수정하지 마세요."
+ws['A1'].font=Font(name=F,size=10,bold=True,color=RED)
+ws['A2']='=IMPORTRANGE("https://docs.google.com/spreadsheets/d/1iSDzZFUv3855k9Zh-tNZALH8z3gY7dTw9j8RlHpJETg","EDW_RAW!A2:U1500")'
 ws.sheet_state='hidden'
 
 TRK="'소재역산 트래커'"
