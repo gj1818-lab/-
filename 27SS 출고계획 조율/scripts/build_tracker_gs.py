@@ -62,7 +62,7 @@ sec=[("정렬 순서",BRAND,[
  "· 원본: 0808 첨부 파일 '원본_0808' 시트 (품번+컬러 1,190행 → 424 스타일 집계, 2026-08-08 기준)",
  "· 작지발행: 0808 원본 '작지발행' 건수 / 컬러 구성: 컬러코드 + 브랜드 컬러명 매핑 / 사양확정: 전산 EDW (8/6, 정보성)",
  "· 비수기: KS_비수기 선정.xlsx 27SS비수기 탭 (8/6 수정본) N열 'O' 기준",
- "· 원단처/겉감/안감/생산처(소재DB): '27SS_소재DB' Merged Data 탭과 IMPORTRANGE 실시간 연동 (숨김 탭 '소재DB_RAW')",
+ "· 원단처/겉감/안감/생산처(소재DB): '27SS_소재DB' Merged Data 탭과 IMPORTRANGE 실시간 연동 — 진행구분 Drop 행 제외, Main 진행만 반영",
  "· 사양확정: '27SS 생산 프로세스 진척현황(자동화)' EDW_RAW와 실시간 연동 (숨김 탭 'EDW_RAW') — 컬러 전체 결재 O / 일부 '부분' / 없음 X",
  "· 최초 1회: '소재DB_RAW' 탭 A3 셀과 'EDW_RAW' 탭 A2 셀에서 각각 '액세스 허용' 클릭 필요 — 이후 자동 갱신",
  "· 생산처(소재DB) 열은 크로스체크용 — 0808 생산처와 다르면 빨간색 표시 (픽스처/픽스쳐 같은 표기 차이도 포함되니 확인 필요)",
@@ -154,13 +154,13 @@ for i,r in enumerate(rows):
      'T':(f'=IF($H{rw}="","",IF(AND(ISNUMBER(SEARCH("CMT",$H{rw})),OR(ISNUMBER(SEARCH("완사입",$H{rw})),ISNUMBER(SEARCH("ODM",$H{rw})))),'
           f'"본사/생산처 혼재",IF(ISNUMBER(SEARCH("CMT",$H{rw})),"본사(소재팀)","생산처")))'),
      'U':r['생산처'],
-     'V':f'=IFERROR(TEXTJOIN(" / ",TRUE,UNIQUE(FILTER(소재DB_RAW!$K$3:$K$2000,소재DB_RAW!$G$3:$G$2000=$D{rw}))),"")',
+     'V':f'=IFERROR(TEXTJOIN(" / ",TRUE,UNIQUE(FILTER(소재DB_RAW!$K$3:$K$2000,(소재DB_RAW!$G$3:$G$2000=$D{rw})*ISERROR(SEARCH("drop",소재DB_RAW!$C$3:$C$2000))))),"")',
      'W':r['원산지'],
-     'X':f'=IFERROR(TEXTJOIN(" / ",TRUE,UNIQUE(FILTER(소재DB_RAW!$N$3:$N$2000,소재DB_RAW!$G$3:$G$2000=$D{rw}))),"")',
+     'X':f'=IFERROR(TEXTJOIN(" / ",TRUE,UNIQUE(FILTER(소재DB_RAW!$N$3:$N$2000,(소재DB_RAW!$G$3:$G$2000=$D{rw})*ISERROR(SEARCH("drop",소재DB_RAW!$C$3:$C$2000))))),"")',
      'Y':(f'=IFERROR(TEXTJOIN(CHAR(10),TRUE,UNIQUE(FILTER(소재DB_RAW!$N$3:$N$2000&") "&소재DB_RAW!$O$3:$O$2000,'
-          f'(소재DB_RAW!$G$3:$G$2000=$D{rw})*ISNUMBER(SEARCH("겉감",소재DB_RAW!$M$3:$M$2000))))),"")'),
+          f'(소재DB_RAW!$G$3:$G$2000=$D{rw})*ISNUMBER(SEARCH("겉감",소재DB_RAW!$M$3:$M$2000))*ISERROR(SEARCH("drop",소재DB_RAW!$C$3:$C$2000))))),"")'),
      'Z':(f'=IFERROR(TEXTJOIN(CHAR(10),TRUE,UNIQUE(FILTER(소재DB_RAW!$N$3:$N$2000&") "&소재DB_RAW!$O$3:$O$2000,'
-          f'(소재DB_RAW!$G$3:$G$2000=$D{rw})*ISNUMBER(SEARCH("안감",소재DB_RAW!$M$3:$M$2000))))),"")'),
+          f'(소재DB_RAW!$G$3:$G$2000=$D{rw})*ISNUMBER(SEARCH("안감",소재DB_RAW!$M$3:$M$2000))*ISERROR(SEARCH("drop",소재DB_RAW!$C$3:$C$2000))))),"")'),
      'AA':int(r['기획수량'] or 0),
      'AB':int(r['원가합'] or 0),'AC':int(r['소매가합'] or 0),'AD':nap_v,
      'AE':(f'=IF($K{rw}="","출고일 미정",IF($Q{rw}="X","작지 미발행",IF($Q{rw}="부분","작지 일부 미발행",'
