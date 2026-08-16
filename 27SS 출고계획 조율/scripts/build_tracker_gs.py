@@ -104,10 +104,10 @@ for col,wd in [('B',24),('C',52),('D',50)]: ws.column_dimensions[col].width=wd
 ws=wb.create_sheet("소재역산 트래커")
 headers=["NO","MD","DS","Style Code","품명","컬러 구성","시즌","생산형태 (수/C/완)","출고차순","출고일(주차)","출고예정일",
          "제품입고 시점 (출고-2주, 설연휴 보정)","공장휴무 보정 (일)","소재입고 마감일 (입고-90일-보정)","마감까지 D-day",
-         "비수기 선정","작지발행","사양확정 (전산 실시간)","소재입고 예정/실제일","소재입고 책임","생산처","생산처 (소재DB)","원산지",
+         "비수기 선정","작지발행 (일매·전산 실시간)","사양확정 (전산 실시간)","소재입고 예정/실제일","소재입고 책임","생산처","생산처 (소재DB)","원산지",
          "원단처 (에이전시)","겉감정보 (원단처+품명)","안감정보 (원단처+품명)",
          "기획수량","원가합 (원)","소매가합 (원)","납기1차 (전산참고)","리스크 사유","판정","조율상태","메모/조치사항"]
-INPUT={'J','P','Q','S','AG','AH'}
+INPUT={'J','P','S','AG','AH'}
 ws.freeze_panes='F5'
 h(ws,'A1',"27SS 소재일정 역산 트래커 — 정렬: S코드(봄) → 비수기 선정 → 나머지 (424 스타일)",14)
 ws['A2']="기준일:"; ws['A2'].font=Font(name=F,size=10,color="666666")
@@ -145,7 +145,10 @@ for i,r in enumerate(rows):
      'N':f'=IF($L{rw}="","",$L{rw}-기준정보!$C$6-$M{rw})',
      'O':f'=IF($N{rw}="","",$N{rw}-기준정보!$C$4)',
      'P':r['비수기'] or None,
-     'Q':r['작지발행'],
+     'Q':(f'=IF(COUNTIF(EDW_RAW!$A$2:$A$1500,$D{rw})=0,"",'
+          f'IF(COUNTIFS(EDW_RAW!$A$2:$A$1500,$D{rw},EDW_RAW!$R$2:$R$1500,"<>~",EDW_RAW!$R$2:$R$1500,"<>")'
+          f'=COUNTIF(EDW_RAW!$A$2:$A$1500,$D{rw}),"O",'
+          f'IF(COUNTIFS(EDW_RAW!$A$2:$A$1500,$D{rw},EDW_RAW!$R$2:$R$1500,"<>~",EDW_RAW!$R$2:$R$1500,"<>")>0,"부분","X")))'),
      'R':(f'=IF(COUNTIF(EDW_RAW!$A$2:$A$1500,$D{rw})=0,"",'
           f'IF(COUNTIFS(EDW_RAW!$A$2:$A$1500,$D{rw},EDW_RAW!$U$2:$U$1500,"<>~",EDW_RAW!$U$2:$U$1500,"<>")'
           f'=COUNTIF(EDW_RAW!$A$2:$A$1500,$D{rw}),"O",'
@@ -183,7 +186,7 @@ for i,r in enumerate(rows):
         if col in ('A','G','I','J','M','O','P','Q','R','AF','AG'): c.alignment=Alignment(horizontal='center')
 
 last=HR+N
-for f1,rng in [('"O,X"',f'P{HR+1}:P{last}'),('"O,부분,X"',f'Q{HR+1}:Q{last}'),('"미조율,조율중,조율완료"',f'AG{HR+1}:AG{last}')]:
+for f1,rng in [('"O,X"',f'P{HR+1}:P{last}'),('"미조율,조율중,조율완료"',f'AG{HR+1}:AG{last}')]:
     dv=DataValidation(type="list",formula1=f1,allow_blank=True); ws.add_data_validation(dv); dv.add(rng)
 def cf(col,txt,color,fc):
     dxf=DifferentialStyle(fill=PatternFill(start_color=color,end_color=color,fill_type='solid'),font=Font(name=F,color=fc,bold=True))
