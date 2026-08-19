@@ -147,13 +147,13 @@ for i,r in enumerate(rows):
      'O':f'=IF($N{rw}="","",$N{rw}-기준정보!$C$4)',
      'P':r['비수기'] or None,
      'Q':(f'=IF(COUNTIF(EDW_RAW!$A$2:$A$1500,$D{rw})=0,"",'
-          f'IF(COUNTIFS(EDW_RAW!$A$2:$A$1500,$D{rw},EDW_RAW!$R$2:$R$1500,"<>~",EDW_RAW!$R$2:$R$1500,"<>")'
+          f'IF(SUMPRODUCT((EDW_RAW!$A$2:$A$1500=$D{rw})*(LEN(EDW_RAW!$R$2:$R$1500)>0))'
           f'=COUNTIF(EDW_RAW!$A$2:$A$1500,$D{rw}),"O",'
-          f'IF(COUNTIFS(EDW_RAW!$A$2:$A$1500,$D{rw},EDW_RAW!$R$2:$R$1500,"<>~",EDW_RAW!$R$2:$R$1500,"<>")>0,"부분","X")))'),
+          f'IF(SUMPRODUCT((EDW_RAW!$A$2:$A$1500=$D{rw})*(LEN(EDW_RAW!$R$2:$R$1500)>0))>0,"부분","X")))'),
      'R':(f'=IF(COUNTIF(EDW_RAW!$A$2:$A$1500,$D{rw})=0,"",'
-          f'IF(COUNTIFS(EDW_RAW!$A$2:$A$1500,$D{rw},EDW_RAW!$U$2:$U$1500,"<>~",EDW_RAW!$U$2:$U$1500,"<>")'
+          f'IF(SUMPRODUCT((EDW_RAW!$A$2:$A$1500=$D{rw})*(LEN(EDW_RAW!$U$2:$U$1500)>0))'
           f'=COUNTIF(EDW_RAW!$A$2:$A$1500,$D{rw}),"O",'
-          f'IF(COUNTIFS(EDW_RAW!$A$2:$A$1500,$D{rw},EDW_RAW!$U$2:$U$1500,"<>~",EDW_RAW!$U$2:$U$1500,"<>")>0,"부분","X")))'),
+          f'IF(SUMPRODUCT((EDW_RAW!$A$2:$A$1500=$D{rw})*(LEN(EDW_RAW!$U$2:$U$1500)>0))>0,"부분","X")))'),
      'S':None,
      'T':(f'=IF($H{rw}="","",IF(AND(ISNUMBER(SEARCH("CMT",$H{rw})),OR(ISNUMBER(SEARCH("완사입",$H{rw})),ISNUMBER(SEARCH("ODM",$H{rw})))),'
           f'"본사/생산처 혼재",IF(ISNUMBER(SEARCH("CMT",$H{rw})),"본사(소재팀)","생산처")))'),
