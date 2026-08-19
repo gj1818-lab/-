@@ -1,0 +1,28 @@
+[27SS 백데이터 시트 연결 — 운영 시트(27SS_생진테+소재DB)에 넣을 수식 2개]
+
+백데이터 시트: https://docs.google.com/spreadsheets/d/1C3YAhWDo3YPMFYHKwk6gWyGyK56ihSTbyx11Nrw2L4A/
+
+■ 사전 준비 (최초 1회, 백데이터 시트에서)
+  1) J2 셀 선택 → 파란색 '액세스 허용' 클릭  (EDW 생산진행현황 연결)
+  2) AF3 셀 선택 → '액세스 허용' 클릭        (소재DB Merged Data 연결)
+  3) 검증 카운터(428행 아래) 확인:
+     작지 O 368 / X 35 / 공란 21, 사양 O 232 / X 171 / 공란 21, LABDIP보유 241 (8/19 기준)
+
+■ 운영 시트 Q5 (작지발행·사양확정 — Q·R 두 열이 한 번에 채워짐)
+  ① Q5:R428 범위 선택 → Delete (기존 값·수식 비우기)
+  ② Q5 한 셀에 아래 수식 붙여넣기:
+
+=ARRAYFORMULA(IF($D$5:$D$428="",,IFERROR(VLOOKUP($D$5:$D$428,IMPORTRANGE("https://docs.google.com/spreadsheets/d/1C3YAhWDo3YPMFYHKwk6gWyGyK56ihSTbyx11Nrw2L4A","A2:C425"),{2,3},FALSE),"")))
+
+  ③ 처음 한 번 '액세스 허용' 클릭 (운영 시트 → 백데이터 시트 연결 승인)
+
+■ 운영 시트 AA5 (LAB DIP CFM)
+  ① AA5:AA428 범위 선택 → Delete
+  ② AA5 한 셀에 아래 수식 붙여넣기:
+
+=ARRAYFORMULA(IF($D$5:$D$428="",,IFERROR(VLOOKUP($D$5:$D$428,IMPORTRANGE("https://docs.google.com/spreadsheets/d/1C3YAhWDo3YPMFYHKwk6gWyGyK56ihSTbyx11Nrw2L4A","A2:D425"),4,FALSE),"")))
+
+■ 마무리
+  · U399 셀의 깨진 VLOOKUP(#REF!) 삭제
+  · 이후에는 아무것도 안 해도 됨 — EDW/소재DB가 바뀌면 백데이터 시트가 다시 계산하고,
+    운영 시트 Q·R·AA가 자동으로 따라 바뀜 (전 구간 실시간)
