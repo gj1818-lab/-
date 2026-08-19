@@ -62,6 +62,7 @@ sec=[("정렬 순서",BRAND,[
  "· 원본: 0808 첨부 파일 '원본_0808' 시트 (품번+컬러 1,190행 → 424 스타일 집계, 2026-08-08 기준)",
  "· 작지발행: 0808 원본 '작지발행' 건수 / 컬러 구성: 컬러코드 + 브랜드 컬러명 매핑 / 사양확정: 전산 EDW (8/6, 정보성)",
  "· 비수기: KS_비수기 선정.xlsx 27SS비수기 탭 (8/6 수정본) N열 'O' 기준",
+ "· LAB DIP CFM(AA열): 소재DB AK열 실시간 — 스타일 내 원단들의 최근 컨펌일 (Drop 제외, 미컨펌 시 공란)",
  "· 원단처/겉감/안감/생산처(소재DB): '27SS_소재DB' Merged Data 탭과 IMPORTRANGE 실시간 연동 — 진행구분 Drop 행 제외, Main 진행만 반영",
  "· 사양확정: '27SS 생산 프로세스 진척현황(자동화)' EDW_RAW와 실시간 연동 (숨김 탭 'EDW_RAW') — 컬러 전체 결재 O / 일부 '부분' / 없음 X",
  "· 최초 1회: '소재DB_RAW' 탭 A3 셀과 'EDW_RAW' 탭 A2 셀에서 각각 '액세스 허용' 클릭 필요 — 이후 자동 갱신",
@@ -105,9 +106,9 @@ ws=wb.create_sheet("소재역산 트래커")
 headers=["NO","MD","DS","Style Code","품명","컬러 구성","시즌","생산형태 (수/C/완)","출고차순","출고일(주차)","출고예정일",
          "제품입고 시점 (출고-2주, 설연휴 보정)","공장휴무 보정 (일)","소재입고 마감일 (입고-90일-보정)","마감까지 D-day",
          "비수기 선정","작지발행 (일매·전산 실시간)","사양확정 (전산 실시간)","소재입고 예정/실제일","소재입고 책임","생산처","생산처 (소재DB)","원산지",
-         "원단처 (에이전시)","겉감정보 (원단처+품명)","안감정보 (원단처+품명)",
+         "원단처 (에이전시)","겉감정보 (원단처+품명)","안감정보 (원단처+품명)","LAB DIP CFM (소재DB)",
          "기획수량","원가합 (원)","소매가합 (원)","납기1차 (전산참고)","리스크 사유","판정","조율상태","메모/조치사항"]
-INPUT={'J','P','S','AG','AH'}
+INPUT={'J','P','S','AH','AI'}
 ws.freeze_panes='F5'
 h(ws,'A1',"27SS 소재일정 역산 트래커 — 정렬: S코드(봄) → 비수기 선정 → 나머지 (424 스타일)",14)
 ws['A2']="기준일:"; ws['A2'].font=Font(name=F,size=10,color="666666")
@@ -164,51 +165,52 @@ for i,r in enumerate(rows):
           f'(소재DB_RAW!$G$3:$G$2000=$D{rw})*ISNUMBER(SEARCH("겉감",소재DB_RAW!$M$3:$M$2000))*ISERROR(SEARCH("drop",소재DB_RAW!$C$3:$C$2000))))),"")'),
      'Z':(f'=IFERROR(TEXTJOIN(CHAR(10),TRUE,UNIQUE(FILTER(소재DB_RAW!$N$3:$N$2000&") "&소재DB_RAW!$O$3:$O$2000,'
           f'(소재DB_RAW!$G$3:$G$2000=$D{rw})*ISNUMBER(SEARCH("안감",소재DB_RAW!$M$3:$M$2000))*ISERROR(SEARCH("drop",소재DB_RAW!$C$3:$C$2000))))),"")'),
-     'AA':int(r['기획수량'] or 0),
-     'AB':int(r['원가합'] or 0),'AC':int(r['소매가합'] or 0),'AD':nap_v,
-     'AE':(f'=IF($K{rw}="","출고일 미정",IF($Q{rw}="X","작지 미발행",IF($Q{rw}="부분","작지 일부 미발행",'
+     'AA':(f'=IFERROR(MAX(FILTER(소재DB_RAW!$AK$3:$AK$2000,(소재DB_RAW!$G$3:$G$2000=$D{rw})*ISERROR(SEARCH("drop",소재DB_RAW!$C$3:$C$2000))*(소재DB_RAW!$AK$3:$AK$2000<>""))),"")'),
+     'AB':int(r['기획수량'] or 0),
+     'AC':int(r['원가합'] or 0),'AD':int(r['소매가합'] or 0),'AE':nap_v,
+     'AF':(f'=IF($K{rw}="","출고일 미정",IF($Q{rw}="X","작지 미발행",IF($Q{rw}="부분","작지 일부 미발행",'
           f'IF(AND($S{rw}<>"",$S{rw}>$N{rw}),"소재입고 마감("&TEXT($N{rw},"MM/DD")&") 초과",'
           f'IF($Q{rw}="","발행여부 확인 필요",IF($S{rw}="","소재 입고일정 확인 필요","정상"))))))'),
-     'AF':(f'=IF($K{rw}="","",IF(OR(LEFT($AE{rw},2)="작지",LEFT($AE{rw},4)="소재입고"),'
-          f'IF(LEFT($G{rw},1)="S","★ 납기위험(S코드)","◆ 지연주의"),IF($AE{rw}="정상","✓ 정상","? 확인필요")))'),
-     'AG':None,'AH':None,
+     'AG':(f'=IF($K{rw}="","",IF(OR(LEFT($AF{rw},2)="작지",LEFT($AF{rw},4)="소재입고"),'
+          f'IF(LEFT($G{rw},1)="S","★ 납기위험(S코드)","◆ 지연주의"),IF($AF{rw}="정상","✓ 정상","? 확인필요")))'),
+     'AH':None,'AI':None,
     }
     for col,v in vals.items():
         c=ws[f'{col}{rw}']
         if v is not None: c.value=v
         c.font=Font(name=F,size=10); c.border=border
         if col in INPUT: c.fill=PatternFill('solid',fgColor="FFF9C4")
-        if col in ('K','L','N','S') or (col=='AD' and isinstance(v,datetime.datetime)): c.number_format='yyyy-mm-dd'
+        if col in ('K','L','N','S','AA') or (col=='AE' and isinstance(v,datetime.datetime)): c.number_format='yyyy-mm-dd'
         if col=='O': c.number_format='0;[RED]-0'
         if col=='M': c.number_format='0'
-        if col in ('AA','AB','AC'): c.number_format='#,##0'
+        if col in ('AB','AC','AD'): c.number_format='#,##0'
         if col in ('Y','Z'): c.alignment=Alignment(wrap_text=True, vertical='top')
-        if col in ('A','G','I','J','M','O','P','Q','R','AF','AG'): c.alignment=Alignment(horizontal='center')
+        if col in ('A','G','I','J','M','O','P','Q','R','AG','AH'): c.alignment=Alignment(horizontal='center')
 
 last=HR+N
-for f1,rng in [('"O,X"',f'P{HR+1}:P{last}'),('"미조율,조율중,조율완료"',f'AG{HR+1}:AG{last}')]:
+for f1,rng in [('"O,X"',f'P{HR+1}:P{last}'),('"미조율,조율중,조율완료"',f'AH{HR+1}:AH{last}')]:
     dv=DataValidation(type="list",formula1=f1,allow_blank=True); ws.add_data_validation(dv); dv.add(rng)
 def cf(col,txt,color,fc):
     dxf=DifferentialStyle(fill=PatternFill(start_color=color,end_color=color,fill_type='solid'),font=Font(name=F,color=fc,bold=True))
     rule=Rule(type="containsText",operator="containsText",text=txt,dxf=dxf)
     rule.formula=[f'NOT(ISERROR(SEARCH("{txt}",{col}{HR+1})))']
     ws.conditional_formatting.add(f'{col}{HR+1}:{col}{last}',rule)
-cf('AF',"★","F8CBCC",RED); cf('AF',"◆","FDE9CC","9C5700"); cf('AF',"✓",TOTALG,BRAND); cf('AF',"?","EEEEEE","666666")
+cf('AG',"★","F8CBCC",RED); cf('AG',"◆","FDE9CC","9C5700"); cf('AG',"✓",TOTALG,BRAND); cf('AG',"?","EEEEEE","666666")
 # 생산처 크로스체크: 소재DB 생산처에 0808 생산처가 포함되지 않으면 강조
 dxf_mm=DifferentialStyle(fill=PatternFill(start_color="FDE3E4",end_color="FDE3E4",fill_type='solid'),font=Font(name=F,color=RED,bold=True))
 rule_mm=Rule(type="expression",dxf=dxf_mm)
 rule_mm.formula=[f'AND($V{HR+1}<>"",$U{HR+1}<>"",ISERROR(SEARCH($U{HR+1},$V{HR+1})))']
 ws.conditional_formatting.add(f'V{HR+1}:V{last}',rule_mm)
 cf('P',"O","DCEDF7",NAVY)
-widths={'A':5,'B':9,'C':9,'D':13,'E':30,'F':24,'G':9,'H':13,'I':9,'J':12,'K':12,'L':14,'M':9,'N':14,'O':9,'P':9,'Q':9,'R':11,'S':13,'T':13,'U':12,'V':13,'W':10,'X':16,'Y':34,'Z':30,'AA':9,'AB':14,'AC':15,'AD':13,'AE':26,'AF':15,'AG':9,'AH':24}
+widths={'A':5,'B':9,'C':9,'D':13,'E':30,'F':24,'G':9,'H':13,'I':9,'J':12,'K':12,'L':14,'M':9,'N':14,'O':9,'P':9,'Q':9,'R':11,'S':13,'T':13,'U':12,'V':13,'W':10,'X':16,'Y':34,'Z':30,'AA':13,'AB':9,'AC':14,'AD':15,'AE':13,'AF':26,'AG':15,'AH':9,'AI':24}
 for col,wd in widths.items(): ws.column_dimensions[col].width=wd
-ws.auto_filter.ref=f'A{HR}:AH{last}'
+ws.auto_filter.ref=f'A{HR}:AI{last}'
 
 # ---------- 소재DB_RAW (실시간 연동 헬퍼) ----------
 ws=wb.create_sheet("소재DB_RAW")
 ws['A1']="27SS_소재DB > Merged Data 실시간 연동 (IMPORTRANGE). 최초 1회 A3 셀에서 '액세스 허용'을 클릭해야 합니다. 이 탭은 수정하지 마세요."
 ws['A1'].font=Font(name=F,size=10,bold=True,color=RED)
-ws['A3']='=IMPORTRANGE("https://docs.google.com/spreadsheets/d/1_LNPz9XGRmRAJ9Y4cqtFF8NtZTLSIld4vtzLJlOcka0","Merged Data!A3:P2000")'
+ws['A3']='=IMPORTRANGE("https://docs.google.com/spreadsheets/d/1_LNPz9XGRmRAJ9Y4cqtFF8NtZTLSIld4vtzLJlOcka0","Merged Data!A3:AN2000")'
 ws.sheet_state='hidden'
 
 # ---------- EDW_RAW (사양확정 실시간 연동 헬퍼) ----------
@@ -219,7 +221,7 @@ ws['A2']='=IMPORTRANGE("https://docs.google.com/spreadsheets/d/1iSDzZFUv3855k9Zh
 ws.sheet_state='hidden'
 
 TRK="'소재역산 트래커'"
-RNG_D=f'{TRK}!$D$5:$D${last}'; RNG_W=f'{TRK}!$AA$5:$AA${last}'; RNG_X=f'{TRK}!$AB$5:$AB${last}'; RNG_Y=f'{TRK}!$AC$5:$AC${last}'; RNG_P=f'{TRK}!$P$5:$P${last}'
+RNG_D=f'{TRK}!$D$5:$D${last}'; RNG_W=f'{TRK}!$AB$5:$AB${last}'; RNG_X=f'{TRK}!$AC$5:$AC${last}'; RNG_Y=f'{TRK}!$AD$5:$AD${last}'; RNG_P=f'{TRK}!$P$5:$P${last}'
 
 # ---------- 금액 요약 ----------
 ws=wb.create_sheet("금액 요약"); ws.sheet_view.showGridLines=False
@@ -294,8 +296,8 @@ ws['B3']=(f'="기준일: "&TEXT(기준정보!$C$4,"YYYY-MM-DD")&"  ·  소재마
 ws['B3'].font=Font(name=F,size=10,color="666666")
 kpis=[("전체 스타일",f'=COUNTA({TRK}!$D$5:$D${last})',BRAND),
       ("S코드(봄) 스타일",f'=COUNTIF({TRK}!$G$5:$G${last},"S(봄)")',BRAND),
-      ("★ 납기위험(S코드)",f'=COUNTIF({TRK}!$AF$5:$AF${last},"★*")',RED),
-      ("◆ 지연주의(M/X)",f'=COUNTIF({TRK}!$AF$5:$AF${last},"◆*")',ORANGE),
+      ("★ 납기위험(S코드)",f'=COUNTIF({TRK}!$AG$5:$AG${last},"★*")',RED),
+      ("◆ 지연주의(M/X)",f'=COUNTIF({TRK}!$AG$5:$AG${last},"◆*")',ORANGE),
       ("비수기 선정 스타일",f'=COUNTIF({RNG_P},"O")',NAVY)]
 for i,(lab,f_,col_) in enumerate(kpis):
     col=get_column_letter(2+i*2)
@@ -315,8 +317,8 @@ for ri,md in enumerate(mds,start=11):
     ws[f'E{ri}']=f'=COUNTIFS({TRK}!$B$5:$B${last},$B{ri},{TRK}!$Q$5:$Q${last},"X")+COUNTIFS({TRK}!$B$5:$B${last},$B{ri},{TRK}!$Q$5:$Q${last},"부분")'
     ws[f'F{ri}']=f'=COUNTIFS({TRK}!$B$5:$B${last},$B{ri},{TRK}!$R$5:$R${last},"X")+COUNTIFS({TRK}!$B$5:$B${last},$B{ri},{TRK}!$R$5:$R${last},"부분")'
     ws[f'G{ri}']=f'=COUNTIFS({TRK}!$B$5:$B${last},$B{ri},{RNG_P},"O")'
-    ws[f'H{ri}']=f'=COUNTIFS({TRK}!$B$5:$B${last},$B{ri},{TRK}!$AF$5:$AF${last},"★*")'
-    ws[f'I{ri}']=f'=COUNTIFS({TRK}!$B$5:$B${last},$B{ri},{TRK}!$AG$5:$AG${last},"조율완료")'
+    ws[f'H{ri}']=f'=COUNTIFS({TRK}!$B$5:$B${last},$B{ri},{TRK}!$AG$5:$AG${last},"★*")'
+    ws[f'I{ri}']=f'=COUNTIFS({TRK}!$B$5:$B${last},$B{ri},{TRK}!$AH$5:$AH${last},"조율완료")'
     for col in 'BCDEFGHI':
         ws[f'{col}{ri}'].font=Font(name=F,size=10); ws[f'{col}{ri}'].border=border
         if col!='B': ws[f'{col}{ri}'].alignment=Alignment(horizontal='center')
