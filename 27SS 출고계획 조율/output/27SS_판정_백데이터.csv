@@ -1,5 +1,5 @@
-품번,작지발행(일매),사양확정,LAB DIP CFM,labdip_serial,컬러수EDW,일매완료,사양완료,★사용법: J2와 AF3 셀에서 액세스 허용 클릭(최초1회),EDW_RAW(수정금지),,,,,,,,,,,,,,,,,,,,,,소재DB_RAW(수정금지),,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,그리드경계(수정금지)
-8UJGX27101,"=ARRAYFORMULA(IF($A$2:$A$425="""","""",IF($F$2:$F$425=0,"""",IF($G$2:$G$425=$F$2:$F$425,""O"",IF($G$2:$G$425>0,""부분"",""X"")))))","=ARRAYFORMULA(IF($A$2:$A$425="""","""",IF($F$2:$F$425=0,"""",IF($H$2:$H$425=$F$2:$F$425,""O"",IF($H$2:$H$425>0,""부분"",""X"")))))","=ARRAYFORMULA(IF(($A$2:$A$425="""")+($E$2:$E$425=0),"""",TEXT($E$2:$E$425,""yyyy-mm-dd"")))","=MAP($A$2:$A$425,LAMBDA(x,IF(x="""",,MAXIFS($BP$3:$BP$2000,$AL$3:$AL$2000,x,$AH$3:$AH$2000,""<>*drop*""))))","=MAP($A$2:$A$425,LAMBDA(x,IF(x="""",,COUNTIF($J$2:$J$1500,x))))","=MAP($A$2:$A$425,LAMBDA(x,IF(x="""",,COUNTIFS($J$2:$J$1500,x,$AA$2:$AA$1500,""?*""))))","=MAP($A$2:$A$425,LAMBDA(x,IF(x="""",,COUNTIFS($J$2:$J$1500,x,$AD$2:$AD$1500,""?*""))))",,"=IMPORTRANGE(""https://docs.google.com/spreadsheets/d/1iSDzZFUv3855k9Zh-tNZALH8z3gY7dTw9j8RlHpJETg"",""EDW_RAW!A2:U1500"")"
+품번,작지발행(일매),사양확정,LAB DIP CFM,labdip_serial,컬러수EDW,일매완료,사양완료,★사용법: J2와 AF3 셀에서 액세스 허용 클릭(최초1회),EDW_RAW(수정금지),,,,,,,,,,,,,,,,,,,,,,소재DB_RAW(수정금지)
+8UJGX27101,"=ARRAYFORMULA(IF($A$2:$A$425="""","""",IF($F$2:$F$425=0,"""",IF($G$2:$G$425=$F$2:$F$425,""O"",IF($G$2:$G$425>0,""부분"",""X"")))))","=ARRAYFORMULA(IF($A$2:$A$425="""","""",IF($F$2:$F$425=0,"""",IF($H$2:$H$425=$F$2:$F$425,""O"",IF($H$2:$H$425>0,""부분"",""X"")))))","=ARRAYFORMULA(IF(($A$2:$A$425="""")+($E$2:$E$425=0),"""",TEXT($E$2:$E$425,""yyyy-mm-dd"")))","=MAP($A$2:$A$425,LAMBDA(x,IF(x="""",,MAXIFS($BP$3:$BP$2000,$AL$3:$AL$2000,x&""*"",$AH$3:$AH$2000,""<>*drop*""))))","=MAP($A$2:$A$425,LAMBDA(x,IF(x="""",,COUNTIF($J$2:$J$1500,x))))","=MAP($A$2:$A$425,LAMBDA(x,IF(x="""",,COUNTIFS($J$2:$J$1500,x,$AA$2:$AA$1500,""?*""))))","=MAP($A$2:$A$425,LAMBDA(x,IF(x="""",,COUNTIFS($J$2:$J$1500,x,$AD$2:$AD$1500,""?*""))))",,"=IMPORTRANGE(""https://docs.google.com/spreadsheets/d/1iSDzZFUv3855k9Zh-tNZALH8z3gY7dTw9j8RlHpJETg"",""EDW_RAW!A2:U1500"")"
 8UPNX27101,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"=IMPORTRANGE(""https://docs.google.com/spreadsheets/d/1_LNPz9XGRmRAJ9Y4cqtFF8NtZTLSIld4vtzLJlOcka0"",""Merged Data!A3:AN2000"")"
 8UJJX27102
 8UJJX27101
@@ -424,7 +424,7 @@ JWPNM27165
 JWPOM27161
 JWPOM27171
 
-,
+""
 검증_품번수,=COUNTA($A$2:$A$425)
 검증_작지O,"=COUNTIF($B$2:$B$425,""O"")"
 검증_작지부분,"=COUNTIF($B$2:$B$425,""부분"")"
