@@ -22,6 +22,7 @@ r1[0] = "[A~K] 원본 Q~AA (StyleNo/브랜드/품종/시즌/년도/컬러/품명
 r1[11] = "[L~M] 원본 AG~AH (입고원가/예상소매가)"
 r1[13] = "[N~V] 원본 AM~AU (납기1차/MIX/종결여부/입고수량/총수불원가/지수/입고예정일/출고일/라벨)"
 r1[22] = "[W~X] 원본 BE~BF (MD/DS)"
+r1[24] = "[Y] 원본 BO (출고일 2번째 — YELLOW 라벨용 희망 출고주차)"
 r1[25] = "검증_품번행수"
 r1[26] = '=COUNTIF($A$3:$A$10001,"?*")'  # 열린 범위(A3:A)는 CSV 변환 시 #NAME? — 닫힌 범위 필수
 r1[27] = "검증_출고일수"
@@ -33,6 +34,7 @@ r2[0] = imp(f"Q1:AA{MAXROW}")
 r2[11] = imp(f"AG1:AH{MAXROW}")
 r2[13] = imp(f"AM1:AU{MAXROW}")
 r2[22] = imp(f"BE1:BF{MAXROW}")
+r2[24] = imp(f"BO1:BO{MAXROW}")
 rows.append(r2)
 
 with open("output/27FW_생진테_추출.csv", "w", newline="", encoding="utf-8") as f:

@@ -12,7 +12,8 @@ WEEK_RE = re.compile(r"^(\d{1,2})월\s*(\d)주$")  # "9월 2주" 공백 변형 �
 rows = list(csv.reader(open(RAW, encoding="utf-8")))
 # 열: A StyleNo+컬러, B 기획군, C 품종, D 시즌, E 년도, F 컬러, G 품명, H 기획수량,
 #     I 수/C/완, J 원산지명, K 생산처명, L 입고원가, M 예상소매가, N 납기1차, O MIX1,
-#     P 종결여부, Q 입고수량, R 총수불원가, S 지수, T 입고예정일, U 출고일, V 라벨, W MD, X DS
+#     P 종결여부, Q 입고수량, R 총수불원가, S 지수, T 입고예정일, U 출고일(AT·GREEN), V 라벨, W MD, X DS,
+#     Y 출고일2(BO·YELLOW 희망 출고주차) — U 비면 Y로 폴백
 styles = OrderedDict()
 bad_codes, week_bad = [], []
 for r in rows:
@@ -28,7 +29,7 @@ for r in rows:
         "StyleCode": code, "기획군": r[1].strip(), "품종": r[2].strip(), "시즌코드": r[3].strip(),
         "품명": r[6].strip(), "기획수량": 0, "수/C/완": "", "원산지": "", "생산처": "",
         "입고원가": "", "예상소매가": "", "종결여부": "", "입고예정일": "", "출고일(주차)": "",
-        "라벨": "", "MD": "", "DS": "", "컬러구성": [], "출고일_상이": "",
+        "라벨": "", "MD": "", "DS": "", "컬러구성": [], "출고일_상이": "", "출고일2": "", "출고일출처": "",
     })
     s["컬러구성"].append(color)
     qty = r[7].replace(",", "").strip()
@@ -44,12 +45,17 @@ for r in rows:
         if not WEEK_RE.match(w):
             week_bad.append((code, w))
         if not s["출고일(주차)"]:
-            s["출고일(주차)"] = w
+            s["출고일(주차)"] = w; s["출고일출처"] = "AT(생진테)"
         elif s["출고일(주차)"] != w:
             s["출고일_상이"] = f'{s["출고일(주차)"]} / {w}'
+    w2 = (r[24].strip().replace(" ", "") if len(r) > 24 else "")
+    if w2 and WEEK_RE.match(w2) and not s["출고일2"]:
+        s["출고일2"] = w2
 
 for s in styles.values():
     s["컬러구성"] = "/".join(s["컬러구성"])
+    if not s["출고일(주차)"] and s["출고일2"]:
+        s["출고일(주차)"] = s["출고일2"]; s["출고일출처"] = "BO(희망주차)"
 
 with open(OUT, "w", newline="", encoding="utf-8") as f:
     w = csv.DictWriter(f, fieldnames=list(next(iter(styles.values())).keys()))
