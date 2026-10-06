@@ -10,7 +10,7 @@ import csv
 SRC_ID = "1VN6T7hVPzzurd9VDuCgYQTHDUgvRqhDke04BDQCMkdw"
 TAB = "Total(GR,YL통합)"
 MAXROW = 10000
-NCOL = 30
+NCOL = 64  # 소재DB 스필이 AB~BJ(62열)까지 — 그리드 여유 포함
 
 def imp(rng):
     return f'=IMPORTRANGE("https://docs.google.com/spreadsheets/d/{SRC_ID}","{TAB}!{rng}")'
@@ -27,6 +27,7 @@ r1[25] = "검증_품번행수"
 r1[26] = '=COUNTIF($A$3:$A$10001,"?*")'  # 열린 범위(A3:A)는 CSV 변환 시 #NAME? — 닫힌 범위 필수
 r1[27] = "검증_출고일수"
 r1[28] = '=COUNTIF($U$3:$U$10001,"?*")'
+r1[30] = "[AB2~BJ] 소재DB TOTAL A~AI (진행구분/스타일코드/부위/원단처/원단명/원산지/중량/폭/단가/원단납기 등) ↓AB2 허용 필요"
 rows.append(r1)
 # 2행: IMPORTRANGE 앵커 (스필: A2:K / L2:M / N2:V / W2:X)
 r2 = [""] * NCOL
@@ -35,6 +36,8 @@ r2[11] = imp(f"AG1:AH{MAXROW}")
 r2[13] = imp(f"AM1:AU{MAXROW}")
 r2[22] = imp(f"BE1:BF{MAXROW}")
 r2[24] = imp(f"BO1:BO{MAXROW}")
+SOJE = "1C3urGtnxKQFCaJTCZq-h0uckROLbrnNy3g-21nFe8SI"
+r2[27] = f'=IMPORTRANGE("https://docs.google.com/spreadsheets/d/{SOJE}","TOTAL!A1:AI2000")'
 rows.append(r2)
 
 with open("output/27FW_생진테_추출.csv", "w", newline="", encoding="utf-8") as f:
