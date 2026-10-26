@@ -1,7 +1,9 @@
 """주간보고 아티팩트('27SS 소재 진척현황') 데이터 생성.
 
-사용: python3 build_weekly_report_data.py <운영시트.xlsx> <EDW.xlsx> <기준일 YYYY-MM-DD> <출력.json>
+사용: python3 build_weekly_report_data.py <운영시트.xlsx> <EDW.xlsx> <기준일 YYYY-MM-DD> <출력.json> [소재DB.xlsx]
 운영시트 = '27SS_생진테+소재DB' xlsx export, EDW = '27SS 생산 프로세스 진척현황 (자동화)' xlsx export.
+소재DB = '27SS_소재DB' xlsx export. 주면 LAB DIP CFM을 운영시트 AB열 대신 소재DB 'Merged Data'에서 직접 읽는다
+(헤더명으로 열을 찾으므로 소재DB에 열이 추가돼도 안전).
 문제 스타일 = 소재역산 트래커 V열(생산처-원단처 협의날짜) 빨간 칠(FFFF0000).
 """
 import datetime
@@ -15,6 +17,7 @@ from openpyxl import load_workbook
 warnings.filterwarnings('ignore')
 
 oper_path, edw_path, base_str, out_path = sys.argv[1:5]
+mat_path = sys.argv[5] if len(sys.argv) > 5 else None
 base = datetime.date.fromisoformat(base_str)
 
 # 열 번호 (소재역산 트래커, 4행 헤더) — 팀이 열을 삽입하면 밀리므로 헤더로 검증
@@ -69,6 +72,28 @@ def fdate(v):
     return None
 
 
+lab_cfm = None
+if mat_path:
+    md = load_workbook(mat_path, data_only=True, read_only=True)['Merged Data']
+    rows = list(md.iter_rows(min_row=1, max_row=5, values_only=True))
+    hi = next(i for i, r in enumerate(rows) if 'Style Code' in [str(x or '').strip() for x in r])
+    hdr = [str(x or '').replace('\n', ' ').strip() for x in rows[hi]]
+    ci_style = hdr.index('Style Code')
+    ci_stat = hdr.index('진행구분')
+    ci_cfm = next(i for i, h in enumerate(hdr) if 'LAB DIP' in h.upper() and 'CFM' in h.upper())
+    lab_cfm = {}
+    for r in md.iter_rows(min_row=hi + 2, values_only=True):
+        s = str(r[ci_style] or '').strip()
+        v = r[ci_cfm]
+        if not s or 'drop' in str(r[ci_stat] or '').lower():
+            continue
+        if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 30000:
+            v = datetime.datetime(1899, 12, 30) + datetime.timedelta(days=v)
+        if isinstance(v, (datetime.datetime, datetime.date)):
+            d = v.date() if isinstance(v, datetime.datetime) else v
+            lab_cfm[s] = max(lab_cfm.get(s, d), d)
+
+
 def fstr(v):
     d = fdate(v)
     if d:
@@ -115,7 +140,7 @@ for r in range(5, ws.max_row + 1):
         'dday': (dl - base).days if dl else None,
         'jakji': jak(code),
         'jungbal': 'O' if jb in ('O', 'ㅇ') else ('예정' if jb == '발주예정' else '미확정'),
-        'labdip': fstr(cell(r, 'labdip')),
+        'labdip': (lab_cfm[code].strftime('%m/%d') if code in lab_cfm else '') if lab_cfm is not None else fstr(cell(r, 'labdip')),
         'factory': fstr(cell(r, 'factory')),
         'agency': fstr(cell(r, 'agency')),
         'arrive': arr.strftime('%m/%d') if arr else '',

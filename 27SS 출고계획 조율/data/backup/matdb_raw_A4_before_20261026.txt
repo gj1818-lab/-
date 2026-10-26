@@ -1,0 +1,1 @@
+소재DB_RAW!A4 원래 수식: =IMPORTRANGE("https://docs.google.com/spreadsheets/d/1_LNPz9XGRmRAJ9Y4cqtFF8NtZTLSIld4vtzLJlOcka0", "Merged Data!A2:AK")
